@@ -291,7 +291,9 @@ def parse_args():
 
     # dataset parameters
     parser.add_argument('--img_size', type=int, default=224)
-    parser.add_argument('--dataset', type=str, choices=['rectum, word'], default='rectum')
+    parser.add_argument('--dataset', type=str, choices=['rectum', 'word'], default='rectum')
+    parser.add_argument('--data_root', type=str, default='',
+                        help='root directory for the selected dataset')
 
     # runtime config
     parser.add_argument('--output_dir', default='./exp/U-SAM-Rectum',
@@ -463,15 +465,19 @@ def main(args):
 
     # build dataset
     if args.dataset == 'rectum':
+        if not args.data_root:
+            raise ValueError('Missing --data_root for rectum dataset')
         args.sam_num_classes = 3
-        args.root = '/mnt/889cdd89-1094-48ae-b221-146ffe543605/zht/datasets/Rectum/SliceData/DataV6'
+        args.root = args.data_root
         from dataset.rectum_dataloader import RectumDataloader
         dataset_train = RectumDataloader(args.root, mode='train', imgsize=(args.img_size, args.img_size))
         dataset_val = RectumDataloader(args.root, mode='test', imgsize=(args.img_size, args.img_size))
 
     elif args.dataset == 'word':
+        if not args.data_root:
+            raise ValueError('Missing --data_root for word dataset')
         args.sam_num_classes = 17
-        args.root = '/mnt/889cdd89-1094-48ae-b221-146ffe543605/gwd/WORD/'
+        args.root = args.data_root
         from dataset.word_dataloader import WordDataset
         dataset_train = WordDataset(args.root, mode='train', imgsize=(args.img_size, args.img_size))
         dataset_val = WordDataset(args.root, mode='test', imgsize=(args.img_size, args.img_size))
