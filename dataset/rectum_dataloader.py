@@ -129,7 +129,7 @@ class RectumDataloader(Dataset):
             mask = zoom(mask, (self.imgsize[0] / w, self.imgsize[1] / h), order=0)
 
         if np.sum(mask > 0) == 0:
-            return self.__getitem_multicls__(idx)
+            return self.__getitem__((idx + 1) % len(self))
 
         points = None
         pts_per_cls = 10
@@ -140,8 +140,12 @@ class RectumDataloader(Dataset):
                 continue
             step = len(posx) // pts_per_cls
             if self.train:
-                sample_idx = random.sample(range(len(posx)), pts_per_cls)
+                num_samples = min(pts_per_cls, len(posx))
+                sample_idx = random.sample(range(len(posx)), num_samples)
                 _points = [[posx[i], posy[i]] for i in sample_idx]
+                # 如果采样点数不足10个，用重复或零填充，但这里简单处理
+                while len(_points) < pts_per_cls:
+                    _points.append(_points[-1] if _points else [0, 0])  # 简单填充
             else:
                 _points = [[posx[i * step], posy[i * step]] for i in range(pts_per_cls)]
             _points = torch.tensor(np.array(_points, dtype=int)).unsqueeze(0)

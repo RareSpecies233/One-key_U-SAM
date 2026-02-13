@@ -1,6 +1,74 @@
-# u-sam.py 参数说明
+
+
+# U-SAM 项目快速上手指南
+
+U-SAM (Universal Segment Anything Model) 是一个基于 Segment Anything Model (SAM) 的通用分割模型，适用于医学图像分割等任务。
+
+## 快速开始
+
+### 1. 环境设置
+
+确保你有 Python 3.8+ 和 pip 安装。
+
+```bash
+# 克隆项目（如果需要）
+# git clone <repository-url>
+# cd One-key_U-SAM
+
+# 安装依赖
+pip install -r requirements.txt
+```
+
+或者使用 uv（推荐）：
+
+```bash
+uv pip install -r requirements.txt
+```
+
+### 2. 数据准备
+
+将数据集放在指定目录下。数据集应包含：
+- 训练/测试图像和标签（NPZ 格式）
+- bbox CSV 文件
+
+例如，对于 rectum 数据集：
+```
+data_root/
+├── train/
+│   ├── train_bbox.csv
+│   └── train_npz/
+│       ├── image1.npz
+│       └── ...
+└── test/
+    ├── test_bbox.csv
+    └── test_npz/
+        ├── image1.npz
+        └── ...
+```
+
+### 3. 运行训练
+
+基本训练命令：
+
+```bash
+python u-sam.py --epochs 100 --batch_size 24 --dataset rectum --data_root /path/to/data
+```
+
+### 4. 运行推理
+
+使用训练好的模型进行推理：
+
+```bash
+python infer_pth.py --model_path exp/U-SAM-Rectum/checkpoint.pth --input_image /path/to/image --output_dir results/
+```
+
+## u-sam.py 参数说明
 
 本文整理 u-sam.py 的附加参数可选项、默认值与推荐值。
+
+```
+python .\u-sam.py  --epochs 100 --batch_size 24 --dataset rectum --data_root C:\Users\zheng\Desktop\Folder\MedPjt\DataV6
+```
 
 ## SAM 相关
 
@@ -42,3 +110,9 @@
 | --- | --- | --- | --- | --- |
 | --world_size | 任意整数 | 1 | 1 | 进程数 |
 | --dist_url | 任意字符串 | env:// | env:// | 分布式初始化地址 |
+
+## 故障排除
+
+- 如果遇到 "Sample larger than population" 错误，请检查数据集中的掩码是否完整。
+- 确保 CUDA 版本与 PyTorch 兼容。
+- 数据路径请使用绝对路径。
