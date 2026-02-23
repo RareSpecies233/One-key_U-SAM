@@ -54,6 +54,33 @@ data_root/
 python u-sam.py --epochs 100 --batch_size 24 --dataset rectum --data_root /path/to/data
 ```
 
+### 3.1 Windows 一键训练（推荐）
+
+项目根目录提供了两个 Windows 启动脚本：
+
+- `train_windows.bat`：可直接双击启动。
+- `train_windows.ps1`：PowerShell 版本主脚本，可在终端执行。
+
+功能包括：
+
+- 启动时可选择「开始新的训练 / 继续上次训练」。
+- 续训时支持自动查找最新 checkpoint 或手动指定 checkpoint。
+- 训练前展示完整命令并二次确认是否开始。
+- 训练结束后显示本次训练信息（退出码、耗时、最后指标、日志路径等）。
+- 结束前再次确认是否退出，可先查看日志尾部再决定。
+
+使用方式（PowerShell）：
+
+```powershell
+.\train_windows.ps1
+```
+
+若提示脚本执行策略限制，可先执行：
+
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass
+```
+
 ### 4. 运行推理
 
 使用训练好的模型进行推理：
