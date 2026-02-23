@@ -1,4 +1,4 @@
-$ErrorActionPreference = 'Stop'
+﻿$ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 function Read-DefaultString {
@@ -314,3 +314,4 @@ catch {
     Write-Host "脚本执行失败: $($_.Exception.Message)" -ForegroundColor Red
     exit 1
 }
+
