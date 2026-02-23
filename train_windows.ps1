@@ -189,6 +189,7 @@ try {
     $sessionMeta = Join-Path $logsDir ("train_$sessionId.json")
 
     $trainArgs = @(
+        '-u'
         'u-sam.py'
         '--epochs', "$epochs"
         '--batch_size', "$batchSize"
@@ -216,6 +217,7 @@ try {
         exit 0
     }
 
+    $env:PYTHONUNBUFFERED = '1'
     $startTime = Get-Date
     & $pythonExe @pythonPrefixArgs @trainArgs 2>&1 | Tee-Object -FilePath $sessionLog
     $exitCode = $LASTEXITCODE
