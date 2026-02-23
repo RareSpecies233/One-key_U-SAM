@@ -20,6 +20,13 @@ import util.misc as utils
 import matplotlib.pyplot as plt
 
 
+def load_checkpoint_compat(path_or_file, map_location='cpu'):
+    try:
+        return torch.load(path_or_file, map_location=map_location, weights_only=False)
+    except TypeError:
+        return torch.load(path_or_file, map_location=map_location)
+
+
 class mIoUAB(nn.Module):
     def __init__(self, n_classes):
         super(mIoUAB, self).__init__()
@@ -490,7 +497,7 @@ def main(args):
         print('Load checkpoint')
         checkpoint_path = args.resume
         with open(checkpoint_path, 'rb') as f:
-            checkpoint = torch.load(f, map_location='cpu')
+            checkpoint = load_checkpoint_compat(f, map_location='cpu')
             model.load_state_dict(checkpoint['model'])
 
     model.to(device)
@@ -565,7 +572,7 @@ def main(args):
 
     if args.resume:
         print("Resume from checkpoint", args.resume)
-        checkpoint = torch.load(args.resume, map_location='cpu')
+        checkpoint = load_checkpoint_compat(args.resume, map_location='cpu')
         model_without_ddp.load_state_dict(checkpoint['model'])
         if 'optimizer' in checkpoint and 'epoch' in checkpoint:
             optimizer.load_state_dict(checkpoint['optimizer'])
