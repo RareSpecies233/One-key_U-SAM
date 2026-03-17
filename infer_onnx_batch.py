@@ -42,15 +42,38 @@ def parse_args() -> argparse.Namespace:
         default=224,
         help="Model input image size (default: 224)",
     )
+    parser.add_argument(
+        "--pixel_scale",
+        default="auto",
+        choices=["auto", "01", "255"],
+        help=(
+            "Input pixel scaling strategy. "
+            "auto: no_prompt uses [0,1], others use [0,255]; "
+            "01: force [0,1]; 255: force [0,255]."
+        ),
+    )
     return parser.parse_args()
 
 
-def normalize_image(image: np.ndarray) -> np.ndarray:
+def normalize_image(image: np.ndarray, mode: str, pixel_scale: str) -> np.ndarray:
     image = image.astype(np.float32, copy=False)
+
+    if pixel_scale == "auto":
+        target = "01" if mode == "no_prompt" else "255"
+    else:
+        target = pixel_scale
+
     max_val = float(np.max(image)) if image.size else 0.0
-    if max_val > 1.0:
-        image = image / 255.0
-    return np.clip(image, 0.0, 1.0)
+    if target == "01":
+        if max_val > 1.0:
+            image = image / 255.0
+        image = np.clip(image, 0.0, 1.0)
+    else:
+        if max_val <= 1.0:
+            image = image * 255.0
+        image = np.clip(image, 0.0, 255.0)
+
+    return image
 
 
 def resize_2d(image: np.ndarray, out_size: int) -> np.ndarray:
@@ -76,14 +99,15 @@ def build_mode_input(
     cur_idx: int,
     image_key: str,
     img_size: int,
+    pixel_scale: str,
 ) -> np.ndarray:
     if mode == "sota":
         left_idx = max(0, cur_idx - 1)
         right_idx = min(len(all_npz_paths) - 1, cur_idx + 1)
 
-        left = normalize_image(load_npz(all_npz_paths[left_idx])[image_key])
-        mid = normalize_image(load_npz(all_npz_paths[cur_idx])[image_key])
-        right = normalize_image(load_npz(all_npz_paths[right_idx])[image_key])
+        left = normalize_image(load_npz(all_npz_paths[left_idx])[image_key], mode, pixel_scale)
+        mid = normalize_image(load_npz(all_npz_paths[cur_idx])[image_key], mode, pixel_scale)
+        right = normalize_image(load_npz(all_npz_paths[right_idx])[image_key], mode, pixel_scale)
 
         left = resize_2d(left, img_size)
         mid = resize_2d(mid, img_size)
@@ -91,7 +115,7 @@ def build_mode_input(
 
         stacked = np.stack([left, mid, right], axis=0)
     else:
-        image = normalize_image(load_npz(all_npz_paths[cur_idx])[image_key])
+        image = normalize_image(load_npz(all_npz_paths[cur_idx])[image_key], mode, pixel_scale)
         image = resize_2d(image, img_size)
         stacked = np.stack([image, image, image], axis=0)
 
@@ -193,6 +217,7 @@ def main() -> None:
             cur_idx=idx,
             image_key="image",
             img_size=int(args.img_size),
+            pixel_scale=str(args.pixel_scale),
         )
 
         outputs = sess.run(None, {input_name: input_tensor})
